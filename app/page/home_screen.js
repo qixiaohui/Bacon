@@ -4,6 +4,7 @@ import {
   Text,
   View,
   StyleSheet,
+  ScrollView
 } from 'react-native';
 import {
   H4,
@@ -44,8 +45,10 @@ class HomeScreen extends React.Component {
       date: '',
       passengers: 1,
       trip: 'oneway',
-      state: '',
-      city: ''
+      stateFrom: '',
+      cityFrom: '',
+      stateTo: '',
+      cityTo: '',
     };
   };
 
@@ -54,8 +57,6 @@ class HomeScreen extends React.Component {
       method: 'get',
       url: CITY_URL
     }).then((response) => {
-      console.log(response);
-      console.log(this.state);
       this.state.cities = response.data;
       this.state.loaded = true;
       this.forceUpdate();
@@ -77,26 +78,56 @@ class HomeScreen extends React.Component {
     this.forceUpdate();
   }
 
-  setState(state) {
-    this.state.state = state;
+  setStateFrom(state) {
+    this.state.stateFrom = state;
     this.forceUpdate();
   };
 
-  setCity(city) {
-    if (this.state.state == "") {
-      this.refs['SELECT_CITY'].blur();
+  setCityFrom(city) {
+    if (this.state.stateFrom == "") {
       return;
     }
-    this.state.city = city;
+    this.state.cityFrom = city;
     this.forceUpdate();
   }
 
-  getStateOptionList() {
-    return this.refs['STATE_LIST'];
+  getStateFromOptionList() {
+    return this.refs['STATE_LIST_FROM'];
   }
 
-  getCityOptionList() {
-    return this.refs['CITY_LIST'];
+  getCityFromOptionList() {
+    return this.refs['CITY_LIST_FROM'];
+  }
+
+  setStateTo(state) {
+    this.state.stateTo = state;
+    this.forceUpdate();
+  };
+
+  setCityTo(city) {
+    if (this.state.stateTo == "") {
+      return;
+    }
+    this.state.cityTo = city;
+    this.forceUpdate();
+  }
+
+  getStateToOptionList() {
+    return this.refs['STATE_LIST_TO'];
+  }
+
+  getCityToOptionList() {
+    return this.refs['CITY_LIST_TO'];
+  }
+
+  submit() {
+    this.props.navigation.navigate('Flight', {
+      trip: this.state.trip, 
+      from: `${this.state.cityFrom}, ${this.state.stateFrom}`,
+      to: `${this.state.cityTo}, ${this.state.stateTo}`,
+      departure: this.state.date,
+      passenger: this.state.passengers
+    });
   }
 
   render() {
@@ -104,15 +135,15 @@ class HomeScreen extends React.Component {
     if (this.state.loaded) {
       return (
         <View style={styles.container}>
-          <H4 style={styles.subtext}>Select the state</H4>
+          <H4 style={styles.subtext}>Select the departure state</H4>
           <View style={styles.select}>
             <Select
               height={40}
               width={Dimensions.get('window').width-30}
-              optionListRef={this.getStateOptionList.bind(this)}
-              ref="SELECT_STATE"
+              optionListRef={this.getStateFromOptionList.bind(this)}
+              ref="SELECT_STATE_FROM"
               defaultValue="Select a State"
-              onSelect={this.setState.bind(this)}>
+              onSelect={this.setStateFrom.bind(this)}>
               {
                 _.map(this.state.cities, (cities, state) => {
                   return (<Option>{state}</Option>);
@@ -120,22 +151,59 @@ class HomeScreen extends React.Component {
               }
             </Select>
           </View>
-          <H4 style={styles.subtext}>Select the city</H4>
+          <H4 style={styles.subtext}>Select the departure city</H4>
           <View style={styles.select}>
             <Select
               height={40}
               width={Dimensions.get('window').width-30}
-              optionListRef={this.getCityOptionList.bind(this)}
-              ref="SELECT_CITY"
+              optionListRef={this.getCityFromOptionList.bind(this)}
+              ref="SELECT_CITY_FROM"
               defaultValue="Select a City"
-              onSelect={this.setCity.bind(this)}>
+              onSelect={this.setCityFrom.bind(this)}>
+              {
+                this.state.stateFrom == ""? 
+                  _.map(this.state.cities["California"], (city) => {
+                    return (<Option>{city}</Option>);
+                  })
+                  :
+                  _.map(this.state.cities[this.state.stateFrom], (city) => {
+                    return (<Option>{city}</Option>);
+                  })
+              }
+            </Select>
+          </View>
+          <H4 style={styles.subtext}>Select the arrival state</H4>
+          <View style={styles.select}>
+            <Select
+              height={40}
+              width={Dimensions.get('window').width-30}
+              optionListRef={this.getStateToOptionList.bind(this)}
+              ref="SELECT_STATE_TO"
+              defaultValue="Select a State"
+              onSelect={this.setStateTo.bind(this)}>
+              {
+                _.map(this.state.cities, (cities, state) => {
+                  return (<Option>{state}</Option>);
+                })
+              }
+            </Select>
+          </View>
+          <H4 style={styles.subtext}>Select the arrival city</H4>
+          <View style={styles.select}>
+            <Select
+              height={40}
+              width={Dimensions.get('window').width-30}
+              optionListRef={this.getCityToOptionList.bind(this)}
+              ref="SELECT_CITY_TO"
+              defaultValue="Select a City"
+              onSelect={this.setCityTo.bind(this)}>
               {
                 this.state.state == ""? 
                   _.map(this.state.cities["California"], (city) => {
                     return (<Option>{city}</Option>);
                   })
                   :
-                  _.map(this.state.cities[this.state.state], (city) => {
+                  _.map(this.state.cities[this.state.stateTo], (city) => {
                     return (<Option>{city}</Option>);
                   })
               }
@@ -172,12 +240,14 @@ class HomeScreen extends React.Component {
             />
           </View>
           <View style={styles.confirm}>
-            <Button kind='squared' >
+            <Button kind='squared' onPress={this.submit.bind(this)}>
               Confirm
             </Button>
           </View>
-          <OptionList ref="STATE_LIST"/>
-          <OptionList ref="CITY_LIST"/>
+          <OptionList ref="STATE_LIST_FROM"/>
+          <OptionList ref="CITY_LIST_FROM"/>
+          <OptionList ref="STATE_LIST_TO"/>
+          <OptionList ref="CITY_LIST_TO"/>
         </View>
       );
     } else {
@@ -221,10 +291,19 @@ var styles = StyleSheet.create({
     marginTop: 15,
   },
   confirm: {
-    width: Dimensions.get('window').width,
     position: 'absolute',
-    bottom:0,
-    left:0,
+    left: 0,
+    bottom: 0,
+    marginTop: 50,
+    width: Dimensions.get('window').width,
+  },
+  thumb: {
+    width: 30,
+    height: 30,
+    shadowColor: 'black',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.5,
+    shadowRadius: 1,
   }
 });
 
