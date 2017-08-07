@@ -111,6 +111,7 @@ var styles = StyleSheet.create({
   },
   separator: {
     height: 1,
+    marginLeft:25,
     backgroundColor: 'grey',
   },
   rowContent: {

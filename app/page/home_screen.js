@@ -15,6 +15,8 @@ import {
   RadioGroup,
   Button,
   Bubble,
+  Switcher,
+  SegmentedControlButton
 } from 'nachos-ui';
 import DropDown, {
   Select,
@@ -49,6 +51,7 @@ class HomeScreen extends React.Component {
       cityFrom: '',
       stateTo: '',
       cityTo: '',
+      tab: 'search'
     };
   };
 
@@ -135,6 +138,23 @@ class HomeScreen extends React.Component {
     if (this.state.loaded) {
       return (
         <View style={styles.container}>
+          <Switcher
+            style={styles.switcher}
+            onChange={tab => this.setState({ tab })}
+            defaultSelected={this.state.tab}
+          >
+            <SegmentedControlButton
+              value='search'
+              text='search'
+              iconName='md-search'
+            />
+            <SegmentedControlButton
+             value='history' 
+             text='history' 
+             iconName='md-folder-open' />
+          </Switcher>
+          {this.state.tab === 'search'?
+          <View style={styles.innerContainer}>
           <H4 style={styles.subtext}>Select the departure state</H4>
           <View style={styles.select}>
             <Select
@@ -248,6 +268,9 @@ class HomeScreen extends React.Component {
           <OptionList ref="CITY_LIST_FROM"/>
           <OptionList ref="STATE_LIST_TO"/>
           <OptionList ref="CITY_LIST_TO"/>
+          </View>:
+          <View><Spinner/></View>
+          }
         </View>
       );
     } else {
@@ -267,6 +290,15 @@ var styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
     paddingTop: 20,
+  },
+  innerContainer: {
+    flex: 1
+  },
+  switcher: {
+    marginLeft: 35,
+    marginRight: 35,
+    marginBottom: 5,
+    marginTop: 5,
   },
   subtext: {
     marginLeft: 15,
